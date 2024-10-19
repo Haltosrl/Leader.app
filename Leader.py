@@ -37,14 +37,12 @@ price_with_vat = price * 1.10
 
 # Mostrare dettagli sull'Unità Immobiliare
 st.subheader("💼 Dettagli dell'Unità Immobiliare")
-st.metric(label="Capienza Massima", value=f"{capienza_massima} persone", label_visibility='collapsed')
-st.markdown(f"<small>Capienza Massima: {capienza_massima} persone</small>", unsafe_allow_html=True)
-st.metric(label="Prezzo Mensile (IVA esclusa)", value=f"€{price:,.2f}".replace('.', ',').replace(',', '.', 1), label_visibility='collapsed')
 st.markdown(f"<small>Prezzo Mensile (IVA esclusa): €{price:,.2f}</small>", unsafe_allow_html=True)
-st.metric(label="IVA (10%)", value=f"€{vat:,.2f}".replace('.', ',').replace(',', '.', 1), label_visibility='collapsed')
 st.markdown(f"<small>IVA (10%): €{vat:,.2f}</small>", unsafe_allow_html=True)
-st.metric(label="Prezzo Mensile (IVA inclusa)", value=f"€{price_with_vat:,.2f}".replace('.', ',').replace(',', '.', 1), label_visibility='collapsed')
 st.markdown(f"<small>Prezzo Mensile (IVA inclusa): €{price_with_vat:,.2f}</small>", unsafe_allow_html=True)
+
+
+st.markdown(f"<small>Capienza Massima: {capienza_massima} persone</small>", unsafe_allow_html=True)
 
 # Calcolo del totale annuale e totale pagato in 10 anni
 annual_total = price_with_vat * 12
@@ -109,7 +107,7 @@ for anno in range(1, 20):
     guadagno_livello_3 = (gain_third / 100) * price * 12 * nuovi_clienti_livello_3_annuali * (anno if anno <= 10 else (20 - anno))
     guadagno_livello_4 = (gain_fourth / 100) * price * 12 * nuovi_clienti_livello_4_annuali * (anno if anno <= 10 else (20 - anno))
     totale_annuale = guadagno_annuale + guadagno_livello_2 + guadagno_livello_3 + guadagno_livello_4
-    guadagni_19_anni.append({'Anno': anno, 'Guadagno Diretto (€)': f"{guadagno_annuale:,.2f}".replace('.', ',').replace(',', '.', 1), 'Guadagno Livello 2 (€)': f"{guadagno_livello_2:,.2f}".replace('.', ',').replace(',', '.', 1), 'Guadagno Livello 3 (€)': f"{guadagno_livello_3:,.2f}".replace('.', ',').replace(',', '.', 1), 'Guadagno Livello 4 (€)': f"{guadagno_livello_4:,.2f}".replace('.', ',').replace(',', '.', 1), 'Totale (€)': f"{totale_annuale:,.2f}".replace('.', ',').replace(',', '.', 1)})
+    guadagni_19_anni.append({'Anno': anno, 'Diretto (€)': f"{guadagno_annuale:,.2f}".replace('.', ',').replace(',', '.', 1), 'Livello 2 (€)': f"{guadagno_livello_2:,.2f}".replace('.', ',').replace(',', '.', 1), 'Livello 3 (€)': f"{guadagno_livello_3:,.2f}".replace('.', ',').replace(',', '.', 1), 'Livello 4 (€)': f"{guadagno_livello_4:,.2f}".replace('.', ',').replace(',', '.', 1), 'Totale (€)': f"{totale_annuale:,.2f}".replace('.', ',').replace(',', '.', 1), 'Tot. Mese (€)': f"{totale_annuale / 12:,.2f}".replace('.', ',').replace(',', '.', 1)})
     totale_cumulato_annuale += totale_annuale
 
 # Mostrare i guadagni in una tabella interattiva
@@ -118,6 +116,30 @@ guadagni_df = pd.DataFrame(guadagni_19_anni).set_index('Anno')
 
 st.write("### Guadagno del Leader (Anno per Anno)")
 st.dataframe(guadagni_df.style.set_properties(**{'font-size': '10pt'}), width=1400)
+
+# Mostrare il numero di clienti in una nuova tabella
+clienti_19_anni = []
+totale_clienti_annuali_livello_1 = diretti_annuali
+totale_clienti_annuali_livello_2 = nuovi_clienti_livello_2_annuali
+totale_clienti_annuali_livello_3 = nuovi_clienti_livello_3_annuali
+totale_clienti_annuali_livello_4 = nuovi_clienti_livello_4_annuali
+
+for anno in range(1, 20):
+    if anno <= 10:
+        totale_clienti_annuali_livello_1 = diretti_annuali * anno
+        totale_clienti_annuali_livello_2 = nuovi_clienti_livello_2_annuali * anno
+        totale_clienti_annuali_livello_3 = nuovi_clienti_livello_3_annuali * anno
+        totale_clienti_annuali_livello_4 = nuovi_clienti_livello_4_annuali * anno
+    else:
+        totale_clienti_annuali_livello_1 = diretti_annuali * (20 - anno)
+        totale_clienti_annuali_livello_2 = nuovi_clienti_livello_2_annuali * (20 - anno)
+        totale_clienti_annuali_livello_3 = nuovi_clienti_livello_3_annuali * (20 - anno)
+        totale_clienti_annuali_livello_4 = nuovi_clienti_livello_4_annuali * (20 - anno)
+    clienti_19_anni.append({'Anno': anno, 'Diretto': totale_clienti_annuali_livello_1, 'Livello 2': int(totale_clienti_annuali_livello_2), 'Livello 3': int(totale_clienti_annuali_livello_3), 'Livello 4': int(totale_clienti_annuali_livello_4)})
+
+clienti_df = pd.DataFrame(clienti_19_anni).set_index('Anno')
+st.write("### Numero di Clienti (Anno per Anno)")
+st.dataframe(clienti_df.style.set_properties(**{'font-size': '10pt'}), width=1400)
 
 # Totale dei guadagni al termine dei 19 anni
 st.success(f"Totale guadagni del Leader sui diretti al termine dei 19 anni: €{totale_cumulato_annuale:,.2f}".replace('.', ',').replace(',', '.', 1))
@@ -148,3 +170,4 @@ st.markdown("""
         <button style="background-color: #4CAF50; color: white; padding: 10px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer;">Holibuy</button>
     </a>
     """, unsafe_allow_html=True)
+
