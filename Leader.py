@@ -45,7 +45,6 @@ st.markdown(f"<small>Prezzo Mensile (IVA esclusa): €{price:,.2f}</small>", uns
 st.markdown(f"<small>IVA (10%): €{vat:,.2f}</small>", unsafe_allow_html=True)
 st.markdown(f"<small>Prezzo Mensile (IVA inclusa): €{price_with_vat:,.2f}</small>", unsafe_allow_html=True)
 
-
 st.markdown(f"<small>Capienza Massima: {capienza_massima} persone</small>", unsafe_allow_html=True)
 
 # Guadagni sui vari livelli
@@ -90,14 +89,12 @@ for anno in range(1, 20):
     # Calcolo dei clienti attivi per ogni livello considerando i 10 anni di durata
     if anno <= 10:
         clienti_attivi_diretti = diretti_annuali * anno
-        clienti_attivi_livello_2 = nuovi_clienti_livello_2_annuali * anno
-        clienti_attivi_livello_3 = nuovi_clienti_livello_3_annuali * anno
-        clienti_attivi_livello_4 = nuovi_clienti_livello_4_annuali * anno
     else:
-        clienti_attivi_diretti = max(0, diretti_annuali * (20 - anno))
-        clienti_attivi_livello_2 = max(0, nuovi_clienti_livello_2_annuali * (20 - anno))
-        clienti_attivi_livello_3 = max(0, nuovi_clienti_livello_3_annuali * (20 - anno))
-        clienti_attivi_livello_4 = max(0, nuovi_clienti_livello_4_annuali * (20 - anno))
+        clienti_attivi_diretti = diretti_annuali * (20 - anno)
+
+    clienti_attivi_livello_2 = nuovi_clienti_livello_2_annuali * min(anno, 10) if anno <= 10 else nuovi_clienti_livello_2_annuali * (20 - anno)
+    clienti_attivi_livello_3 = nuovi_clienti_livello_3_annuali * min(anno, 10) if anno <= 10 else nuovi_clienti_livello_3_annuali * (20 - anno)
+    clienti_attivi_livello_4 = nuovi_clienti_livello_4_annuali * min(anno, 10) if anno <= 10 else nuovi_clienti_livello_4_annuali * (20 - anno)
 
     guadagno_annuale += (gain_direct / 100) * price * 12 * clienti_attivi_diretti + gain_card_direct * clienti_attivi_diretti
     guadagno_livello_2 += (gain_second / 100) * price * 12 * clienti_attivi_livello_2 + gain_card_level_2 * clienti_attivi_livello_2
@@ -111,28 +108,21 @@ for anno in range(1, 20):
 # Mostrare i guadagni in una tabella interattiva
 guadagni_df = pd.DataFrame(guadagni_19_anni).set_index('Anno')
 
-
 st.write("### Guadagno del Leader (Anno per Anno)")
 st.dataframe(guadagni_df.style.set_properties(**{'font-size': '12pt'}), width=1400)
 
 # Mostrare il numero di clienti in una nuova tabella
 clienti_19_anni = []
-totale_clienti_annuali_livello_1 = diretti_annuali
-totale_clienti_annuali_livello_2 = nuovi_clienti_livello_2_annuali
-totale_clienti_annuali_livello_3 = nuovi_clienti_livello_3_annuali
-totale_clienti_annuali_livello_4 = nuovi_clienti_livello_4_annuali
-
 for anno in range(1, 20):
     if anno <= 10:
         totale_clienti_annuali_livello_1 = diretti_annuali * anno
-        totale_clienti_annuali_livello_2 = nuovi_clienti_livello_2_annuali * anno
-        totale_clienti_annuali_livello_3 = nuovi_clienti_livello_3_annuali * anno
-        totale_clienti_annuali_livello_4 = nuovi_clienti_livello_4_annuali * anno
     else:
         totale_clienti_annuali_livello_1 = diretti_annuali * (20 - anno)
-        totale_clienti_annuali_livello_2 = nuovi_clienti_livello_2_annuali * (20 - anno)
-        totale_clienti_annuali_livello_3 = nuovi_clienti_livello_3_annuali * (20 - anno)
-        totale_clienti_annuali_livello_4 = nuovi_clienti_livello_4_annuali * (20 - anno)
+
+    totale_clienti_annuali_livello_2 = nuovi_clienti_livello_2_annuali * min(anno, 10) if anno <= 10 else nuovi_clienti_livello_2_annuali * (20 - anno)
+    totale_clienti_annuali_livello_3 = nuovi_clienti_livello_3_annuali * min(anno, 10) if anno <= 10 else nuovi_clienti_livello_3_annuali * (20 - anno)
+    totale_clienti_annuali_livello_4 = nuovi_clienti_livello_4_annuali * min(anno, 10) if anno <= 10 else nuovi_clienti_livello_4_annuali * (20 - anno)
+
     clienti_19_anni.append({'Anno': anno, 'Diretto': totale_clienti_annuali_livello_1, 'Livello 2': int(totale_clienti_annuali_livello_2), 'Livello 3': int(totale_clienti_annuali_livello_3), 'Livello 4': int(totale_clienti_annuali_livello_4)})
 
 clienti_df = pd.DataFrame(clienti_19_anni).set_index('Anno')
@@ -152,32 +142,43 @@ st.sidebar.markdown(f"<div style='background-color: #f0ffff; padding: 10px; bord
 guadagno_primo_anno_mese = guadagni_19_anni[0]['Tot. Mese (€)']
 st.sidebar.markdown(f"<div style='background-color: #f0ffff; padding: 10px; border-radius: 5px;'><b>Guadagno mensile del Leader per 10 anni, se lavorasse solo 1 anno: <span style='font-size: 1.5em;'><b>€{guadagno_primo_anno_mese}</b></span></b></div>", unsafe_allow_html=True)
 
+# Calcolo del Fondo di Accantonamento (FDA)
+fda_19_anni = []
+percentuale_fda_direct = 16 / 100
+percentuale_fda_level_2 = 22 / 100
+percentuale_fda_level_3 = 24 / 100
+percentuale_fda_level_4 = 26 / 100
+fda_contributo = 7
 
+totale_fda_cumulato_decimo_anno = 0
+totale_fda_cumulato_ventesimo_anno = 0
 
-# Calcolo della media annuale al termine dei 19 anni
-media_annuale = totale_cumulato_annuale / 19
+for anno in range(1, 20):
+    if anno <= 10:
+        fda_diretto = diretti_annuali * anno * 12 * fda_contributo * percentuale_fda_direct
+    else:
+        fda_diretto = diretti_annuali * (20 - anno) * 12 * fda_contributo * percentuale_fda_direct
 
-# Aggiunta della Holibuy Card
-holibuy_card_price = 199.00
-holibuy_card_total_10_years = holibuy_card_price * 10
+    fda_level_2 = nuovi_clienti_livello_2_annuali * min(anno, 10) * 12 * fda_contributo * percentuale_fda_level_2 if anno <= 10 else nuovi_clienti_livello_2_annuali * (20 - anno) * 12 * fda_contributo * percentuale_fda_level_2
+    fda_level_3 = nuovi_clienti_livello_3_annuali * min(anno, 10) * 12 * fda_contributo * percentuale_fda_level_3 if anno <= 10 else nuovi_clienti_livello_3_annuali * (20 - anno) * 12 * fda_contributo * percentuale_fda_level_3
+    fda_level_4 = nuovi_clienti_livello_4_annuali * min(anno, 10) * 12 * fda_contributo * percentuale_fda_level_4 if anno <= 10 else nuovi_clienti_livello_4_annuali * (20 - anno) * 12 * fda_contributo * percentuale_fda_level_4
 
-# Calcolo del totale annuale e totale pagato in 10 anni
-annual_total = (price_with_vat * 12) + holibuy_card_price
-total_10_years = (annual_total * 10)
+    totale_fda_annuale = fda_diretto + fda_level_2 + fda_level_3 + fda_level_4
+    fda_19_anni.append({'Anno': anno, 'FDA Diretto (€)': f"{fda_diretto:,.2f}".replace('.', ',').replace(',', '.', 1), 'FDA Livello 2 (€)': f"{fda_level_2:,.2f}".replace('.', ',').replace(',', '.', 1), 'FDA Livello 3 (€)': f"{fda_level_3:,.2f}".replace('.', ',').replace(',', '.', 1), 'FDA Livello 4 (€)': f"{fda_level_4:,.2f}".replace('.', ',').replace(',', '.', 1), 'Totale FDA (€)': f"{totale_fda_annuale:,.2f}".replace('.', ',').replace(',', '.', 1)})
 
-st.subheader("💰 Totale Pagato")
-col1, col2, col3 = st.columns(3)
-col1.metric(label="Totale Annuale", value=f"€{annual_total:,.2f}".replace('.', ',').replace(',', '.', 1), label_visibility='collapsed')
-col1.markdown(f"<small>Totale Annuale: €{annual_total:,.2f}</small>", unsafe_allow_html=True)
-col2.metric(label="Totale in 10 Anni", value=f"€{total_10_years:,.2f}".replace('.', ',').replace(',', '.', 1), label_visibility='collapsed')
-col2.markdown(f"<small>Totale in 10 Anni (incluso Holibuy Card): €{total_10_years:,.2f}</small>", unsafe_allow_html=True)
-col3.metric(label="Costo Holibuy Card in 10 Anni", value=f"€{holibuy_card_total_10_years:,.2f}".replace('.', ',').replace(',', '.', 1), label_visibility='collapsed')
-col3.markdown(f"<small>Costo Holibuy Card per 10 anni: €{holibuy_card_total_10_years:,.2f}</small>", unsafe_allow_html=True)
-col2.markdown(f"<small>Totale in 10 Anni: €{total_10_years:,.2f}</small>", unsafe_allow_html=True)
+    if anno <= 10:
+        totale_fda_cumulato_decimo_anno += totale_fda_annuale
+    totale_fda_cumulato_ventesimo_anno += totale_fda_annuale
 
-# Guadagno annuale del Leader sui diretti
+# Mostrare il Fondo di Accantonamento (FDA) in una tabella interattiva
+fda_df = pd.DataFrame(fda_19_anni).set_index('Anno')
 
+st.write("### Fondo di Accantonamento (FDA) del Leader (Anno per Anno) Se il Leader si mantiene sopra la media di 18 Nuovi clienti all'anno")
+st.dataframe(fda_df.style.set_properties(**{'font-size': '10pt'}), width=1400)
 
+# Totale accantonamento al decimo e al ventesimo anno
+st.sidebar.markdown(f"<div style='background-color: #E6FFE6; padding: 10px; border-radius: 5px;'><b>Totale accantonamento al decimo anno: <span style='font-size: 1.5em;'><b>€{totale_fda_cumulato_decimo_anno:,.2f}</b></span></b></div>".replace('.', ',').replace(',', '.', 1), unsafe_allow_html=True)
+st.sidebar.markdown(f"<div style='background-color: #E6FFE6; padding: 10px; border-radius: 5px;'><b>Totale accantonamento al ventesimo anno: <span style='font-size: 1.5em;'><b>€{totale_fda_cumulato_ventesimo_anno:,.2f}</b></span></b></div>".replace('.', ',').replace(',', '.', 1), unsafe_allow_html=True)
 # Descrizione del prodotto venduto
 st.subheader("🏠 Prodotto Venduto")
 st.write("Il leader vende una vacanza per 10 anni, ossia un appartamento dove trascorrere una vacanza. I pagamenti mensili sono per 10 anni e ogni pagamento dà diritto al leader di percepire il guadagno come descritto, a seconda del livello.")
@@ -197,4 +198,3 @@ st.markdown("""
         <button style="background-color: #4CAF50; color: white; padding: 10px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer;">Holibuy</button>
     </a>
     """, unsafe_allow_html=True)
-
