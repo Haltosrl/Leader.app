@@ -3,7 +3,7 @@ st.set_page_config(layout="wide")
 import pandas as pd
 import numpy as np
 
-st.image("/Users/gp/Library/CloudStorage/OneDrive-Personale/Holibuy/Rete di vendita/Logo Holibuy.png", caption="Holibuy", width=100)
+st.image("https://raw.githubusercontent.com/Haltosrl/Leader.app/main/.devcontainer/Logo%20Holibuy.png", caption="Holibuy", width=100)
 
 # Titolo dell'app con emoji
 st.title("Leader - Opportunità di Guadagno")
